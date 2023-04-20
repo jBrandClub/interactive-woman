@@ -14,8 +14,13 @@ let scene,
     idle, // Idle, the default state our character returns to
     clock = new THREE.Clock();
 
+export {
+    neck,
+    waist
+};
+
 export function init() {
-    const MODEL_PATH = './assets/gigi.glb';
+    const MODEL_PATH = './assets/gigiGLTF.glb';
 
     const canvas = document.querySelector('#c');
     const backgroundColor = 0xf1f1f1;
@@ -31,6 +36,8 @@ export function init() {
     });
     renderer.shadowMap.enabled = true;
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.gammaFactor = 1.7;
+    renderer.gammaOutput = true;
     document.body.appendChild(renderer.domElement);
 
     // Add a camera
@@ -56,14 +63,22 @@ export function init() {
                     o.castShadow = true;
                     o.receiveShadow = true;
                 }
+                // Reference the neck and waist bones
+                if (o.isBone && o.name === 'mixamorigNeck') {
+                    neck = o;
+                }
+                if (o.isBone && o.name === 'mixamorigSpine') {
+                    waist = o;
+                }
             });
             model.position.y = -11;
-            model.scale.set(0.05, 0.05, 0.05);
+            model.scale.set(50, 50, 50);
             scene.add(model);
 
             mixer = new THREE.AnimationMixer(model);
             let idleAnim = fileAnimations[0];
-            console.log(idleAnim);
+            idleAnim.tracks.splice(3, 12);
+            console.log(idleAnim.tracks);
             idle = mixer.clipAction(idleAnim);
             idle.play();
         },
@@ -75,7 +90,7 @@ export function init() {
 
     let geometry = new THREE.SphereGeometry(5, 32, 32);
     let material = new THREE.MeshBasicMaterial({
-        color: 0x9bffaf
+        color: "#3ffcc7"
     }); // 0xf2ce2e 
     let sphere = new THREE.Mesh(geometry, material);
     sphere.position.z = -15;
@@ -147,4 +162,67 @@ export function resizeRendererToDisplaySize(renderer) {
         renderer.setSize(width, height, false);
     }
     return needResize;
+}
+
+export function moveJoint(mouse, joint, degreeLimit) {
+    let degrees = getMouseDegrees(mouse.x, mouse.y, degreeLimit);
+    joint.rotation.y = THREE.Math.degToRad(degrees.x);
+    joint.rotation.x = THREE.Math.degToRad(degrees.y);
+}
+
+export function getMousePos(e) {
+    return {
+        x: e.clientX,
+        y: e.clientY
+    };
+}
+
+function getMouseDegrees(x, y, degreeLimit) {
+    let dx = 0,
+        dy = 0,
+        xdiff,
+        xPercentage,
+        ydiff,
+        yPercentage;
+
+    let w = {
+        x: window.innerWidth,
+        y: window.innerHeight
+    };
+
+    // Left (Rotates neck left between 0 and -degreeLimit)
+
+    // 1. If cursor is in the left half of screen
+    if (x <= w.x / 2) {
+        // 2. Get the difference between middle of screen and cursor position
+        xdiff = w.x / 2 - x;
+        // 3. Find the percentage of that difference (percentage toward edge of screen)
+        xPercentage = (xdiff / (w.x / 2)) * 100;
+        // 4. Convert that to a percentage of the maximum rotation we allow for the neck
+        dx = ((degreeLimit * xPercentage) / 100) * -1;
+    }
+    // Right (Rotates neck right between 0 and degreeLimit)
+    if (x >= w.x / 2) {
+        xdiff = x - w.x / 2;
+        xPercentage = (xdiff / (w.x / 2)) * 100;
+        dx = (degreeLimit * xPercentage) / 100;
+    }
+    // Up (Rotates neck up between 0 and -degreeLimit)
+    if (y <= w.y / 2) {
+        ydiff = w.y / 2 - y;
+        yPercentage = (ydiff / (w.y / 2)) * 100;
+        // Note that I cut degreeLimit in half when she looks up
+        dy = (((degreeLimit * 0.5) * yPercentage) / 100) * -1;
+    }
+
+    // Down (Rotates neck down between 0 and degreeLimit)
+    if (y >= w.y / 2) {
+        ydiff = y - w.y / 2;
+        yPercentage = (ydiff / (w.y / 2)) * 100;
+        dy = (degreeLimit * yPercentage) / 100;
+    }
+    return {
+        x: dx,
+        y: dy
+    };
 }
