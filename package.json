@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "An interactive 3D character using Three.js",
   "main": "index.js",
+  "homepage": "https://jBrandClub.github.io/interactive-woman",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack"
+    "build": "webpack",
+    "deploy": "gh-pages -d dist"
   },
   "repository": {
     "type": "git",
@@ -17,10 +19,11 @@
   "bugs": {
     "url": "https://github.com/jBrandClub/interactive-woman/issues"
   },
-  "homepage": "https://github.com/jBrandClub/interactive-woman#readme",
   "devDependencies": {
     "eslint-loader": "^3.0.2",
+    "favicons-webpack-plugin": "^1.0.2",
     "file-loader": "^4.2.0",
+    "gh-pages": "^2.1.1",
     "html-webpack-plugin": "^3.2.0",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.9"
