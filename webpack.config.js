@@ -10,7 +10,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            title: "Interactive Woman",
+            title: "Interactive Woman 👧",
         }),
         new FaviconsWebpackPlugin({
             logo: './logo.png',

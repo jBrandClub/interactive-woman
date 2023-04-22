@@ -9,9 +9,9 @@ let scene,
     model, // Our character
     neck, // Reference to the neck bone in the skeleton
     waist, // Reference to the waist bone in the skeleton
-    possibleAnims, // Animations found in our file
     mixer, // THREE.js animations mixer
     idle, // Idle, the default state our character returns to
+    walk,
     clock = new THREE.Clock(),
     leftOrRight = 0;
 export {
@@ -21,7 +21,7 @@ export {
 };
 
 export function init() {
-    const MODEL_PATH = './assets/models/gigiGLTF.glb';
+    const MODEL_PATH = './assets/models/gess.glb';
 
     const canvas = document.querySelector('#c');
     const backgroundColor = 0xf1f1f1;
@@ -46,7 +46,7 @@ export function init() {
     camera = new THREE.PerspectiveCamera(
         50,
         window.innerWidth / window.innerHeight,
-        0.1,
+        7.0,
         1000
     );
     camera.position.z = 30
@@ -74,14 +74,18 @@ export function init() {
                 }
             });
             model.position.y = -11;
-            model.scale.set(80, 80, 80);
+            model.scale.set(7.0, 7.0, 7.0);
             scene.add(model);
 
             mixer = new THREE.AnimationMixer(model);
-            let idleAnim = fileAnimations[0];
+            const idleAnim = fileAnimations[1];
             idleAnim.tracks.splice(3, 12);
             idle = mixer.clipAction(idleAnim);
             idle.play();
+
+            const walkAnim = fileAnimations[0];
+            walkAnim.tracks.splice(3, 12);
+            walk = mixer.clipAction(walkAnim);
         },
         undefined, // We don't need this function
         function (error) {
@@ -111,7 +115,7 @@ export function init() {
     dirLight.position.set(-8, 12, 8);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize = new THREE.Vector2(1024, 1024);
-    dirLight.shadow.camera.near = 0.1;
+    dirLight.shadow.camera.near = 7.0;
     dirLight.shadow.camera.far = 1500;
     dirLight.shadow.camera.left = d * -1;
     dirLight.shadow.camera.right = d;
@@ -139,7 +143,11 @@ export function update() {
     if (mixer) {
         mixer.update(clock.getDelta());
     }
-    walkGigi();
+    if (model) {
+        rotateGigi();
+        walkGigi();
+    }
+
     renderer.render(scene, camera);
     requestAnimationFrame(update);
 }
@@ -158,6 +166,8 @@ export function getMousePos(e) {
 }
 
 export function setLeftOrRight(x) {
+    // sets leftOrRight variable to -1 if cursor is on the left of screen
+    // sets leftOrRight variable to 1 if cursor is right of screen
     const w = window.innerWidth;
     let direction = "None";
     if (x < 0) {
@@ -170,10 +180,19 @@ export function setLeftOrRight(x) {
     leftOrRight = direction == "left" ? -1 : direction == "right" ? 1 : 0;
 }
 
+function rotateGigi() {
+}
+
 function walkGigi() {
-    if (model) {
         model.position.x += leftOrRight * 0.1;
-    }
+        if (leftOrRight != 0) {
+            walk.setLoop(THREE.LoopRepeat);
+            walk.play();
+            idle.stop();
+        } else {
+            idle.play();
+            walk.stop();
+        }
 }
 
 function getMouseDegrees(x, y, degreeLimit) {
